@@ -29,9 +29,9 @@ export const getOptions = (): SideBarMenu[] => {
       loggedUserOnly: true,
     },
     {
-      path: "update",
+      path: "profile",
       icon: <SettingsAccessibilityIcon />,
-      name: "Update",
+      name: "Profile",
       loggedUserOnly: true,
     },
     {

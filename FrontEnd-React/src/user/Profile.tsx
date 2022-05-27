@@ -5,31 +5,24 @@ import { showErrorMessage, showSuccessMessage } from "../components/SnackBar";
 import FormTextField from "../components/TextField";
 import { Title } from "../components/Title";
 import backEndUrl from "../environment";
-import { getCurrent, update, updatePicture } from "./userService";
+import { useSessionUser } from "../store/userStore";
+import { update, updatePicture } from "./userService";
 
-export default function Update() {
+export default function Profile() {
   const [name, setName] = useState<string>("");
   const [userName, setUserName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [repeatPassword, setRepeatPassword] = useState<string>("");
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const user = useSessionUser();
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function fetchData() {
-    await getCurrent()
-      .then((response) => {
-        const user = response.content;
-        setName(user.name);
-        setUserName(user.user_name);
-        setAvatarUrl(user.avatar_url);
-      })
-      .catch((err) =>
-        showErrorMessage(err.response.data.message || "Unexcpected Error")
-      );
-  }
+    if (user) {
+      setName(user.name);
+      setUserName(user.user_name);
+      setAvatarUrl(user.avatar_url);
+    }
+  }, [user]);
 
   const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -53,9 +46,20 @@ export default function Update() {
       );
   };
 
+  const handlePictureUpdate = async (file: File) => {
+    await updatePicture(file)
+      .then((response) => {
+        showSuccessMessage("Picture Updated");
+        setAvatarUrl(response.content.avatar_url);
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
+  };
+
   return (
     <>
-      <Grid container component={Paper} elevation={10} p={5}>
+      <Grid container component={Paper} elevation={10} p={2}>
         <Grid
           md={6}
           sm={12}
@@ -78,13 +82,9 @@ export default function Update() {
               type="file"
               hidden
               accept="image/jpeg"
-              onChange={async (e) => {
-                if (e.target.files) {
-                  await updatePicture(e.target.files[0]).then((response) =>
-                    setAvatarUrl(response.content.avatar_url)
-                  );
-                }
-              }}
+              onChange={(e) =>
+                e.target.files && handlePictureUpdate(e.target.files[0])
+              }
             />
           </Button>
         </Grid>
@@ -93,14 +93,14 @@ export default function Update() {
             <FormTextField
               label="Full Name"
               name="name"
-              title="Enter Full Name"
+              title="Full Name"
               value={name}
               setValue={setName}
             />
             <FormTextField
               label="User"
               name="user"
-              title="Enter Username"
+              title="User Name"
               value={userName}
               setValue={setUserName}
             />

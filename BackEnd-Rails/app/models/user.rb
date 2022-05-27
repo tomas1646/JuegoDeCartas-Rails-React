@@ -6,9 +6,10 @@ class User < ApplicationRecord
   has_one_attached :avatar
 
   def json
-    {name:, user_name:, avatar_url: self.avatar.attached? ? Rails.application.routes.url_helpers.rails_blob_path(self.avatar, only_path: true) : "", token:}
+    { name:, user_name:, token:,
+      avatar_url: avatar.attached? ? Rails.application.routes.url_helpers.rails_blob_path(avatar, only_path: true) : '' }
   end
-  
+
   private
 
   def set_token

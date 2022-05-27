@@ -4,10 +4,6 @@ class UsersController < ApplicationController
   def update
     @user.assign_attributes(user_params)
 
-    if params[:avatar]
-      @user.avatar.attach(params[:avatar])
-    end
-
     if @user.save
       render_success_response(@user.json, 'User Updated')
     else

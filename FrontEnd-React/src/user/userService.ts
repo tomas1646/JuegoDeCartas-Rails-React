@@ -12,13 +12,6 @@ export interface User {
   avatar_url: string;
 }
 
-export async function getCurrent(): Promise<ApiResponse<User>> {
-  const response: ApiResponse<User> = (await axios.get(userUrl + "/current"))
-    .data;
-
-  return response;
-}
-
 export async function login(
   user_name: string,
   password: string
@@ -46,7 +39,7 @@ export async function register(
 export async function update(
   name: string,
   user_name: string,
-  password?: string
+  password: string
 ): Promise<ApiResponse<User>> {
   const response: ApiResponse<User> = (
     await axios.put(
