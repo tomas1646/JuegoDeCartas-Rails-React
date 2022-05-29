@@ -8,24 +8,33 @@ export interface Board {
   token: string;
   player_1_name: string;
   player_2_name: string;
+  player_3_name: string;
+  player_4_name: string;
   status: string;
-  board: string[];
+  cards: string[];
+  scores: string[];
+  players: number;
 }
 
-export async function createGame(): Promise<ApiResponse<Board>> {
-  const response: ApiResponse<Board> = (
-    await axios.post(boardUrl, {})
-  ).data;
+export async function createGame(players: number): Promise<ApiResponse<Board>> {
+  const response: ApiResponse<Board> = (await axios.post(boardUrl, { players }))
+    .data;
 
   return response;
 }
 
 export async function joinGame(
-  boardToken: string,
+  boardToken: string
 ): Promise<ApiResponse<Board>> {
   const response: ApiResponse<Board> = (
     await axios.post(boardUrl + `/${boardToken}/join`, {})
   ).data;
+
+  return response;
+}
+
+export async function getBoards(): Promise<ApiResponse<Board[]>> {
+  const response: ApiResponse<Board[]> = (await axios.get(boardUrl)).data;
 
   return response;
 }

@@ -8,4 +8,10 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :boards, only: [:index, :create, :show] do
+    member do
+      post :join
+    end
+  end
+
 end

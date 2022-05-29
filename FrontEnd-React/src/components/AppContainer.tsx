@@ -16,11 +16,11 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { Link, useNavigate } from "react-router-dom";
 import { SideBarMenu } from "../utils/utils";
 import { cleanupSessionUser, useSessionUser } from "../store/userStore";
-import React, { useEffect } from "react";
 import { Box } from "@mui/system";
 import backEndUrl from "../environment";
 
 interface Props {
+  title: string;
   children: JSX.Element[] | JSX.Element;
   navigation?: SideBarMenu[];
 }
@@ -30,11 +30,6 @@ export default function AppContainer(props: Props) {
   const navigation = useNavigate();
   const user = useSessionUser();
 
-  useEffect(() => {
-    !user && navigation("/");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
@@ -43,7 +38,7 @@ export default function AppContainer(props: Props) {
       >
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Card Game
+            {props.title}
           </Typography>
           {user && (
             <div
@@ -55,9 +50,8 @@ export default function AppContainer(props: Props) {
             >
               <Avatar
                 src={user.avatar_url ? `${backEndUrl}/${user.avatar_url}` : ""}
-                alt=""
               ></Avatar>
-              <Typography>{user && user.name}</Typography>
+              <Typography>{user.name}</Typography>
             </div>
           )}
         </Toolbar>
@@ -78,7 +72,7 @@ export default function AppContainer(props: Props) {
         <Divider />
         <List>
           {props.navigation &&
-            props.navigation.map((item, index) => {
+            props.navigation.map((item) => {
               if (
                 item.showAlways ||
                 (user && item.loggedUserOnly) ||
@@ -125,7 +119,7 @@ export default function AppContainer(props: Props) {
           )}
         </List>
       </Drawer>
-      <Container maxWidth="md" sx={{ flexGrow: 1, p: 9 }}>
+      <Container maxWidth="lg" sx={{ flexGrow: 1, p: 9 }}>
         {props.children}
       </Container>
     </Box>

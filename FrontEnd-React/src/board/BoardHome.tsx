@@ -5,49 +5,30 @@ import ButtonPanel from "../components/ButtonPanel";
 import { showErrorMessage, showSuccessMessage } from "../components/SnackBar";
 import FormTextField from "../components/TextField";
 import { Title, Text } from "../components/Title";
-import { useSessionUser } from "../store/userStore";
-import {
-  createGame,
-  joinGame,
-  Board,
-  getOpenBoards,
-  getUserOpenBoards,
-} from "./boardService";
+import { createGame, joinGame, Board, getBoards } from "./boardService";
 
 export default function BoardHome() {
   const navigate = useNavigate();
-  const user = useSessionUser();
-
   const [boardId, setBoardId] = useState<string>("");
-  const [openBoards, setOpenBoards] = useState<Board[]>([]);
-  const [userOpenBoards, setUserOpenBoards] = useState<Board[]>([]);
+  const [players, setPlayers] = useState<number>(4);
+  const [boards, setBoards] = useState<Board[]>([]);
+  //const [userOpenBoards, setUserOpenBoards] = useState<Board[]>([]);
 
   useEffect(() => {
-    if (!user) {
-      showErrorMessage("User isn't logged in");
-      return navigate("/login");
-    }
-
-    //fetchData();
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function fetchData() {
-    await getOpenBoards()
-      .then((response) => setOpenBoards(response.content))
+  function fetchData() {
+    getBoards()
+      .then((response) => setBoards(response.content))
       .catch((err) =>
         showErrorMessage(err.response.data.message || "Unexcpected Error")
       );
-
-    await getUserOpenBoards()
-      .then((response) => setUserOpenBoards(response.content))
-      .catch((err) =>
-        showErrorMessage(err.response.data.message || "Unexpected Error")
-      );
   }
 
-  const handleNewGameButton = async () => {
-    await createGame()
+  const handleNewGameButton = () => {
+    createGame(players)
       .then((response) => {
         showSuccessMessage(response.message);
         navigate("/board/" + response.content.token);
@@ -57,8 +38,8 @@ export default function BoardHome() {
       );
   };
 
-  const handleJoinButton = async () => {
-    await joinGame(boardId)
+  const handleJoinButton = () => {
+    joinGame(boardId)
       .then((response) => {
         showSuccessMessage(response.message);
         navigate("/board/" + response.content.token);
@@ -97,7 +78,7 @@ export default function BoardHome() {
       <Divider style={{ marginTop: "30px", marginBottom: "30px" }} />
       <Title text="Your Games In Course" />
 
-      {userOpenBoards &&
+      {/*userOpenBoards &&
         userOpenBoards.map((board) => (
           <div
             style={{
@@ -117,12 +98,12 @@ export default function BoardHome() {
               Copy Id
             </Button>
           </div>
-        ))}
+          ))*/}
       <Divider style={{ marginTop: "30px", marginBottom: "30px" }} />
       <Title text="Games waiting for players" />
 
-      {openBoards &&
-        openBoards.map((board) => (
+      {boards &&
+        boards.map((board) => (
           <div
             style={{
               display: "flex",

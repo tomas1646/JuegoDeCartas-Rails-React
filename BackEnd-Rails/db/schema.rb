@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_05_27_150355) do
+ActiveRecord::Schema[7.0].define(version: 2022_05_28_144939) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -37,6 +37,28 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_27_150355) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "boards", force: :cascade do |t|
+    t.integer "player_1_id"
+    t.integer "player_2_id"
+    t.integer "player_3_id"
+    t.integer "player_4_id"
+    t.boolean "player_1_lost", default: false
+    t.boolean "player_2_lost", default: false
+    t.boolean "player_3_lost", default: false
+    t.boolean "player_4_lost", default: false
+    t.string "token"
+    t.string "score", default: "[\"\",\"\",\"\",\"\"]"
+    t.string "cards", default: "[\"\",\"\",\"\",\"\"]"
+    t.integer "status", default: 0
+    t.integer "players"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["player_1_id"], name: "index_boards_on_player_1_id"
+    t.index ["player_2_id"], name: "index_boards_on_player_2_id"
+    t.index ["player_3_id"], name: "index_boards_on_player_3_id"
+    t.index ["player_4_id"], name: "index_boards_on_player_4_id"
   end
 
   create_table "users", force: :cascade do |t|

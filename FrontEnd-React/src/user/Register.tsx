@@ -12,14 +12,14 @@ export default function Register() {
   const [userName, setUserName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const handleRegister = async (event: FormEvent<HTMLFormElement>) => {
+  const handleRegister = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!userName || !password || !name) {
       return showErrorMessage("Inputs cant be empty");
     }
 
-    await register(userName, password, name)
+    register(userName, password, name)
       .then((response) => {
         showSuccessMessage(response.message);
         navigate("/login");

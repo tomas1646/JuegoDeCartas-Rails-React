@@ -24,7 +24,7 @@ export default function Profile() {
     }
   }, [user]);
 
-  const handleUpdate = async (event: FormEvent<HTMLFormElement>) => {
+  const handleUpdate = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!userName || !name) {
@@ -35,7 +35,7 @@ export default function Profile() {
       return showErrorMessage("Passwords doesn't match");
     }
 
-    await update(name, userName, password)
+    update(name, userName, password)
       .then((response) => {
         showSuccessMessage(response.message);
         setPassword("");
@@ -46,8 +46,8 @@ export default function Profile() {
       );
   };
 
-  const handlePictureUpdate = async (file: File) => {
-    await updatePicture(file)
+  const handlePictureUpdate = (file: File) => {
+    updatePicture(file)
       .then((response) => {
         showSuccessMessage("Picture Updated");
         setAvatarUrl(response.content.avatar_url);
@@ -81,7 +81,7 @@ export default function Profile() {
             <input
               type="file"
               hidden
-              accept="image/jpeg"
+              accept="image/*"
               onChange={(e) =>
                 e.target.files && handlePictureUpdate(e.target.files[0])
               }

@@ -11,14 +11,14 @@ export default function Login() {
   const [userName, setUserName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
+  const handleLogin = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (!userName || !password) {
       return showErrorMessage("Inputs cant be empty");
     }
 
-    await login(userName, password)
+    login(userName, password)
       .then((response) => {
         showSuccessMessage(response.message);
         navigate("/");
