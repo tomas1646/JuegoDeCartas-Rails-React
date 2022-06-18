@@ -1,6 +1,6 @@
 class BoardsController < ApplicationController  
-  before_action :set_board, only: %i[show join move]
-  before_action :check_token, only: %i[create join find_user_boards find_user_open_boards move]
+  before_action :set_board, except: [:index, :cards]
+  before_action :check_token, except: [:index, :show]
 
   def index
     boards = Board.all
@@ -20,32 +20,108 @@ class BoardsController < ApplicationController
     end
   end
 
-  
   def join
-    if @board.player_1 == @user || @board.player_2 == @user || @board.player_3 == @user || @board.player_4 == @user
+    if is_player_in_board @user
       return render_success_response(@board.json, 'Joined to the board')
     end
 
-    if @board.player_1.present? && @board.player_2.present? && @board.player_3.present? && @board.player_4.present?
-      return render_error_response({}, 'Board is full') 
+    if !@board.waiting_players?
+      return render_error_response({}, 'Game Started. Cant join.')
     end
 
-    if @board.player_2.blank?
-        @board.player_2 = @user
-    else
-        if @board.player_3.blank?
-            @board.player_3 = @user
-        else
-            @board.player_4 = @user
-            @board.status = :Dealing
-        end
-    end
-    
+    @board.join_board @user
 
     if @board.save
       render_success_response(@board.json, 'Joined to the board')
     else
       render_error_response({}, "Error Joining Board #{board.errors.full_messages.join(', ')}")
+    end
+  end
+
+  def start_game
+    if @board.players === 1
+      render_error_response({}, "There is only one player. Cant start game.")
+    end
+
+    @board.board_status = :in_course
+    @board.round_status = :waiting_wins_asked
+
+    if @board.save
+      render_success_response(@board.json, 'Game Started')
+    else
+      render_error_response({}, "Error Starting Game #{board.errors.full_messages.join(', ')}")
+    end
+  end
+
+  def start_card_round
+    if !@board.waiting_wins_asked? 
+      render_error_response({}, "Board isn't waiting for wins")
+    end
+
+    @board.round_status = :waiting_card_throw
+
+    if @board.save
+      render_success_response(@board.json, 'Board status change to Waiting Card Throw')
+    else
+      render_error_response({}, "Error Starting Game #{board.errors.full_messages.join(', ')}")
+    end
+  end
+
+  def end_card_round
+    if !@board.waiting_card_throw? 
+      render_error_response({}, "Board isn't waiting card throw")
+    end
+
+    @board.round_status = :round_finished
+
+    if @board.save
+      render_success_response(@board.json, 'Board status change to Round Finished')
+    else
+      render_error_response({}, "Error Finishing Round #{board.errors.full_messages.join(', ')}")
+    end
+  end
+
+  def update_score
+    if @user != @board.player_1
+      render_error_response({}, "Only player 1 can change scores")
+    end
+
+    @board.score = params[:scores].to_json
+    
+    if @board.save
+      render_success_response(@board.json, 'Scores Updated')
+    else
+      render_error_response({}, "Error Updating Scores #{board.errors.full_messages.join(', ')}")
+    end
+  end
+
+  def throw_card
+    @board.throw_card @user, params[:card]
+    
+    if @board.save
+      render_success_response(@board.json, 'Card Thrown')
+    else
+      render_error_response({}, "Error Throwing Card #{board.errors.full_messages.join(', ')}")
+    end
+  end
+
+  def cards
+    card_array = []
+
+    for i in 1..params[:card_number].to_i
+      card_array.push(Deck.instance.get_card)
+    end
+
+    render_success_response(card_array)
+  end
+
+  def wins
+    @board.set_player_win @user, params[:wins]
+    
+    if @board.save
+      render_success_response(@board.json, 'Win Number Set')
+    else
+      render_error_response({}, "Error setting win number #{board.errors.full_messages.join(', ')}")
     end
   end
 
@@ -64,9 +140,5 @@ class BoardsController < ApplicationController
     return if @user.present?
 
     render_error_response({}, "User with token #{request.headers['Authorization']} doesn't exists", 404)
-  end
-
-  def check_win
-
   end
 end

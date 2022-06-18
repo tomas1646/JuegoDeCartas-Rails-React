@@ -6,16 +6,14 @@ class CreateBoards < ActiveRecord::Migration[7.0]
       t.belongs_to :player_3, class_name: "User"
       t.belongs_to :player_4, class_name: "User"
 
-      t.boolean :player_1_lost, default: false
-      t.boolean :player_2_lost, default: false
-      t.boolean :player_3_lost, default: false
-      t.boolean :player_4_lost, default: false
-
       t.string :token
       t.string :score, default: "[\"\",\"\",\"\",\"\"]"
       t.string :cards, default: "[\"\",\"\",\"\",\"\"]"
-      t.integer :status, default: 0
+      t.string :wins, default: "[\"\",\"\",\"\",\"\"]"
+      t.integer :board_status, default: 0
+      t.integer :round_status
       t.integer :players
+      t.integer :curr_round, default: 3
 
       t.timestamps
     end

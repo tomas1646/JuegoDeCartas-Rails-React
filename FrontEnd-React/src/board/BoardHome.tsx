@@ -10,7 +10,7 @@ import { createGame, joinGame, Board, getBoards } from "./boardService";
 export default function BoardHome() {
   const navigate = useNavigate();
   const [boardId, setBoardId] = useState<string>("");
-  const [players, setPlayers] = useState<number>(4);
+  const [players, setPlayers] = useState<number>(1);
   const [boards, setBoards] = useState<Board[]>([]);
   //const [userOpenBoards, setUserOpenBoards] = useState<Board[]>([]);
 

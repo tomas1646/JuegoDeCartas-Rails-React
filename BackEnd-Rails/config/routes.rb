@@ -14,9 +14,9 @@ Rails.application.routes.draw do
     
     member do
       post :join
-      post :start
+      post :start_game
       post :start_card_round
-      post :wins
+      post :set_wins
       post :update_score
       post :throw_card
       post :end_card_round

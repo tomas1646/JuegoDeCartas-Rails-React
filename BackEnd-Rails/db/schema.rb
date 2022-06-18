@@ -44,14 +44,12 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_28_144939) do
     t.integer "player_2_id"
     t.integer "player_3_id"
     t.integer "player_4_id"
-    t.boolean "player_1_lost", default: false
-    t.boolean "player_2_lost", default: false
-    t.boolean "player_3_lost", default: false
-    t.boolean "player_4_lost", default: false
     t.string "token"
     t.string "score", default: "[\"\",\"\",\"\",\"\"]"
     t.string "cards", default: "[\"\",\"\",\"\",\"\"]"
-    t.integer "status", default: 0
+    t.string "wins", default: "[\"\",\"\",\"\",\"\"]"
+    t.integer "board_status", default: 0
+    t.integer "round_status"
     t.integer "players"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
