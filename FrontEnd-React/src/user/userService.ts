@@ -30,7 +30,7 @@ export async function register(
   name: string
 ): Promise<ApiResponse<User>> {
   const response: ApiResponse<User> = (
-    await axios.post(userUrl + "/register", { name, user_name, password })
+    await axios.post(userUrl, { name, user_name, password })
   ).data;
 
   return response;

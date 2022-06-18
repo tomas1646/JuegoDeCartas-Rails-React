@@ -1,5 +1,15 @@
 class UsersController < ApplicationController
-  before_action :check_token, only: [:update, :current, :update_picture]
+  before_action :check_token, only: [:update, :update_picture]
+
+  def create
+    user = User.new(user_params)
+
+    if user.save
+      render_success_response(user.json, 'User Created')
+    else
+      render_error_response({}, "Error creating User #{user.errors.full_messages.join(', ')}")
+    end
+  end
 
   def update
     @user.assign_attributes(user_params)
@@ -22,20 +32,6 @@ class UsersController < ApplicationController
       render_success_response(@user.json, 'Picture Updated')
     else
       render_error_response({}, "Error updating Picture #{@user.errors.full_messages.join(', ')}")
-    end
-  end
-
-  def current
-    render_success_response(@user.json)
-  end
-
-  def register
-    user = User.new(user_params)
-
-    if user.save
-      render_success_response(user.json, 'User Created')
-    else
-      render_error_response({}, "Error creating User #{user.errors.full_messages.join(', ')}")
     end
   end
 
