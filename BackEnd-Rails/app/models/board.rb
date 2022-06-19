@@ -140,9 +140,9 @@ class Board < ApplicationRecord
   def give_cards
     map_player_cards = {}
 
-    Board.first.players.times do |i|
+    players.times do |i|
       cards = []
-      Board.first.round_card_number.times do
+      round_card_number.times do
         cards.push Deck.instance.get_card
       end
       map_player_cards[(i + 1).to_s] = cards
