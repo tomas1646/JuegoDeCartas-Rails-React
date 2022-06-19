@@ -1,4 +1,4 @@
-import { Button, Paper } from "@mui/material";
+import { Button, Divider, Paper } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { showSuccessMessage, showErrorMessage } from "../components/SnackBar";
 import FormTextField, { FormNumberField } from "../components/TextField";
@@ -44,6 +44,7 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     curr_round_left,
   } = props.board;
   const prevRoundStatus = useRef<string>("");
+  const prevRoundCardNumber = useRef<number>(0);
 
   useEffect(() => {
     prevRoundStatus.current = board_status;
@@ -55,7 +56,10 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     setShowWinDialog(round_status === RoundStatus.waiting_wins_asked.name);
     setShowCardDialog(round_status === RoundStatus.waiting_card_throw.name);
     setGameStarted(board_status === BoardStatus.in_course.name);
-    setRoundCardNumber(round_card_number);
+
+    if (prevRoundCardNumber.current !== round_card_number) {
+      prevRoundCardNumber.current = round_card_number;
+    }
 
     if (prevRoundStatus.current !== round_status) {
       prevRoundStatus.current === RoundStatus.waiting_card_throw.name &&
@@ -72,7 +76,13 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     setScoreP2(scores[1]);
     setScoreP3(scores[2]);
     setScoreP4(scores[3]);
-  }, [scores]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setRoundCardNumber(prevRoundCardNumber.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prevRoundCardNumber.current]);
 
   const finishCardRoundAction = (n: number) => {
     if (token) {
@@ -151,41 +161,47 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
           }}
         >
           {cards.length === 0 && (
-            <Button variant="outlined" onClick={() => getCardAction()}>
-              Pedir Cartas
-            </Button>
+            <>
+              <Button variant="outlined" onClick={() => getCardAction()}>
+                Pedir Cartas
+              </Button>
+              <Divider orientation="vertical" flexItem />
+            </>
           )}
           {cards.length !== 0 && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "6px",
-              }}
-            >
-              <h3>Cards</h3>
-
+            <>
               <div
                 style={{
                   display: "flex",
-                  flexDirection: "row",
+                  flexDirection: "column",
                   gap: "6px",
                 }}
               >
-                {cards &&
-                  cards.map((card) => (
-                    <div
-                      style={{
-                        backgroundColor: "lightgray",
-                        width: "90px",
-                        height: "60px",
-                      }}
-                    >
-                      {card}
-                    </div>
-                  ))}
+                <h3>Cards</h3>
+
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: "6px",
+                  }}
+                >
+                  {cards &&
+                    cards.map((card) => (
+                      <div
+                        style={{
+                          backgroundColor: "lightgray",
+                          width: "90px",
+                          height: "60px",
+                        }}
+                      >
+                        {card}
+                      </div>
+                    ))}
+                </div>
               </div>
-            </div>
+              <Divider orientation="vertical" flexItem />
+            </>
           )}
 
           {showWinDialog && (
@@ -261,19 +277,36 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                     Confirm
                   </Button>
                 </div>
+                <Divider orientation="vertical" flexItem />
               </>
             )}
             {!gameStarted && (
-              <Button variant="outlined" onClick={() => startGameAction()}>
-                Empezar juego
-              </Button>
+              <>
+                <Button variant="outlined" onClick={() => startGameAction()}>
+                  Empezar juego
+                </Button>
+                <Divider orientation="vertical" flexItem />
+              </>
             )}
             {showWinDialog && (
-              <Button variant="outlined" onClick={() => startCardThrowAction()}>
-                Empezar a tirar cartas
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  onClick={() => startCardThrowAction()}
+                >
+                  Empezar a tirar cartas
+                </Button>
+                <Divider orientation="vertical" flexItem />
+              </>
             )}
-            <div style={{ maxWidth: "300px" }}>
+            <div
+              style={{
+                maxWidth: "300px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "9px",
+              }}
+            >
               <h3>Update Scores</h3>
               <FormTextField
                 label="Player 1 Score"
