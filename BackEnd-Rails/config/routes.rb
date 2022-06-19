@@ -1,17 +1,12 @@
 Rails.application.routes.draw do
-
-  resources :users, only: [:create, :update] do
+  resources :users, only: %i[create update] do
     collection do
       post :login
       put :update_picture
     end
   end
 
-  resources :boards, only: [:index, :create, :show] do
-    collection do
-      get :cards
-    end
-    
+  resources :boards, only: %i[index create show] do
     member do
       post :join
       post :start_game
@@ -20,7 +15,7 @@ Rails.application.routes.draw do
       post :update_score
       post :throw_card
       post :end_card_round
+      get :cards
     end
   end
-
 end

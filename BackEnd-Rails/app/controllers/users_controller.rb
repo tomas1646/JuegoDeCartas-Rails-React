@@ -1,5 +1,5 @@
 class UsersController < ApplicationController
-  before_action :check_token, only: [:update, :update_picture]
+  before_action :check_token, only: %i[update update_picture]
 
   def create
     user = User.new(user_params)
@@ -22,12 +22,10 @@ class UsersController < ApplicationController
   end
 
   def update_picture
-    if @user.avatar.attached?
-      @user.avatar.purge
-    end
+    @user.avatar.purge if @user.avatar.attached?
 
     @user.avatar.attach(params[:avatar])
-    
+
     if @user.save
       render_success_response(@user.json, 'Picture Updated')
     else

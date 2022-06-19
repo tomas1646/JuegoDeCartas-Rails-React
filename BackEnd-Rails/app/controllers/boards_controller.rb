@@ -1,6 +1,6 @@
-class BoardsController < ApplicationController  
-  before_action :set_board, except: [:index, :cards]
-  before_action :check_token, except: [:index, :show]
+class BoardsController < ApplicationController
+  before_action :set_board, except: %i[index create]
+  before_action :check_token, except: %i[index show]
 
   def index
     boards = Board.all
@@ -21,13 +21,9 @@ class BoardsController < ApplicationController
   end
 
   def join
-    if is_player_in_board @user
-      return render_success_response(@board.json, 'Joined to the board')
-    end
+    return render_success_response(@board.json, 'Joined to the board') if @board.is_player_in_board @user
 
-    if !@board.waiting_players?
-      return render_error_response({}, 'Game Started. Cant join.')
-    end
+    return render_error_response({}, 'Game Started. Cant join.') unless @board.waiting_players?
 
     @board.join_board @user
 
@@ -39,12 +35,9 @@ class BoardsController < ApplicationController
   end
 
   def start_game
-    if @board.players === 1
-      render_error_response({}, "There is only one player. Cant start game.")
-    end
+    render_error_response({}, 'There is only one player. Cant start game.') if @board.players == 1
 
-    @board.board_status = :in_course
-    @board.round_status = :waiting_wins_asked
+    @board.start_game
 
     if @board.save
       render_success_response(@board.json, 'Game Started')
@@ -54,9 +47,7 @@ class BoardsController < ApplicationController
   end
 
   def start_card_round
-    if !@board.waiting_wins_asked? 
-      render_error_response({}, "Board isn't waiting for wins")
-    end
+    render_error_response({}, "Board isn't waiting for wins") unless @board.waiting_wins_asked?
 
     @board.round_status = :waiting_card_throw
 
@@ -68,11 +59,9 @@ class BoardsController < ApplicationController
   end
 
   def end_card_round
-    if !@board.waiting_card_throw? 
-      render_error_response({}, "Board isn't waiting card throw")
-    end
+    render_error_response({}, 'All players must play cards') unless @board.waiting_card_throw?
 
-    @board.round_status = :round_finished
+    @board.finish_round params[:round_card_number].to_i
 
     if @board.save
       render_success_response(@board.json, 'Board status change to Round Finished')
@@ -82,12 +71,10 @@ class BoardsController < ApplicationController
   end
 
   def update_score
-    if @user != @board.player_1
-      render_error_response({}, "Only player 1 can change scores")
-    end
+    render_error_response({}, 'Only player 1 can change scores') if @user != @board.player_1
 
     @board.score = params[:scores].to_json
-    
+
     if @board.save
       render_success_response(@board.json, 'Scores Updated')
     else
@@ -97,7 +84,7 @@ class BoardsController < ApplicationController
 
   def throw_card
     @board.throw_card @user, params[:card]
-    
+
     if @board.save
       render_success_response(@board.json, 'Card Thrown')
     else
@@ -106,25 +93,20 @@ class BoardsController < ApplicationController
   end
 
   def cards
-    card_array = []
-
-    for i in 1..params[:card_number].to_i
-      card_array.push(Deck.instance.get_card)
-    end
+    card_array = @board.get_player_cards @user
 
     render_success_response(card_array)
   end
 
-  def wins
+  def set_wins
     @board.set_player_win @user, params[:wins]
-    
+
     if @board.save
       render_success_response(@board.json, 'Win Number Set')
     else
       render_error_response({}, "Error setting win number #{board.errors.full_messages.join(', ')}")
     end
   end
-
 
   private
 
