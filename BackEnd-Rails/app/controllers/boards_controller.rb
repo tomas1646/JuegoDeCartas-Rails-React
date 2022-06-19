@@ -4,7 +4,7 @@ class BoardsController < ApplicationController
 
   def index
     boards = Board.all
-    render_success_response(boards.preload(:player_1, :player_2, :player_3, :player_4).map { |board| board.json })
+    render_success_response(boards.preload(:player1, :player2, :player3, :player4).map { |board| board.json })
   end
 
   def show
@@ -12,7 +12,7 @@ class BoardsController < ApplicationController
   end
 
   def create
-    board = Board.new(player_1: @user, players: params[:players])
+    board = Board.new(player1: @user, players: params[:players])
     if board.save
       render_success_response(board.json, 'Board Created')
     else
@@ -71,7 +71,7 @@ class BoardsController < ApplicationController
   end
 
   def update_score
-    render_error_response({}, 'Only player 1 can change scores') if @user != @board.player_1
+    render_error_response({}, 'Only player 1 can change scores') if @user != @board.player1
 
     @board.score = params[:scores].to_json
 

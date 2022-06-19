@@ -16,39 +16,31 @@ export const BoardStatus: Record<string, EnumData> = {
     name: "in_course",
     number: 2,
   },
-  player_1_win: {
-    name: "player_1_win",
+  player1_win: {
+    name: "player1_win",
     number: 3,
   },
-  player_2_win: {
-    name: "player_2_win",
+  player2_win: {
+    name: "player2_win",
     number: 4,
   },
-  player_3_win: {
-    name: "player_3_win",
+  player3_win: {
+    name: "player3_win",
     number: 5,
   },
-  player_4_win: {
-    name: "player_4_win",
+  player4_win: {
+    name: "player4_win",
     number: 6,
   },
 };
 
 export const RoundStatus: Record<string, EnumData> = {
-  dealing: {
-    name: "dealing",
-    number: 0,
-  },
   waiting_wins_asked: {
     name: "waiting_wins_asked",
-    number: 1,
+    number: 0,
   },
   waiting_card_throw: {
     name: "waiting_card_throw",
-    number: 2,
-  },
-  round_finished: {
-    name: "round_finished",
-    number: 3,
+    number: 1,
   },
 };

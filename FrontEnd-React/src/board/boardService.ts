@@ -6,17 +6,18 @@ const boardUrl = backEndUrl + "/boards";
 
 export interface Board {
   token: string;
-  player_1_name: string;
-  player_2_name: string;
-  player_3_name: string;
-  player_4_name: string;
+  player1_name: string;
+  player2_name: string;
+  player3_name: string;
+  player4_name: string;
   board_status: string;
   round_status: string;
   cards: string[];
   scores: string[];
   wins: string[];
   players: number;
-  currRound: number;
+  round_card_number: number;
+  curr_round_left: number;
 }
 
 export async function createGame(players: number): Promise<ApiResponse<Board>> {
@@ -84,10 +85,10 @@ export async function startCardThrow(
 }
 
 export async function getCards(
-  card_number: number
+  boardToken: string
 ): Promise<ApiResponse<string[]>> {
   const response: ApiResponse<string[]> = (
-    await axios.get(boardUrl + `/cards?card_number=${card_number}`)
+    await axios.get(boardUrl + `/${boardToken}/cards`)
   ).data;
 
   return response;
@@ -116,10 +117,13 @@ export async function throwCard(
 }
 
 export async function endCardRound(
-  boardToken: string
+  boardToken: string,
+  round_card_number?: number
 ): Promise<ApiResponse<Board>> {
   const response: ApiResponse<Board> = (
-    await axios.post(`${boardUrl}/${boardToken}/end_card_round`)
+    await axios.post(`${boardUrl}/${boardToken}/end_card_round`, {
+      round_card_number,
+    })
   ).data;
 
   return response;

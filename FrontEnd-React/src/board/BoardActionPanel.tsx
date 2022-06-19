@@ -1,6 +1,6 @@
 import { Button, Paper } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import { showSuccessMessage } from "../components/SnackBar";
+import React, { useEffect, useRef, useState } from "react";
+import { showSuccessMessage, showErrorMessage } from "../components/SnackBar";
 import FormTextField, { FormNumberField } from "../components/TextField";
 import { useSessionUser } from "../store/userStore";
 import {
@@ -17,15 +17,14 @@ import { BoardStatus, RoundStatus } from "./BoardTypes";
 
 interface BoardActionPanelProps {
   board: Board;
-  forceUpdate: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export default function BoardActionPanel(props: BoardActionPanelProps) {
   const user = useSessionUser();
-
   const [win, setWin] = useState<number>(0);
   const [cards, setCards] = useState<string[]>([]);
   const [cardNumber, setCardNumber] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [roundCardNumber, setRoundCardNumber] = useState<number>(0);
   const [scoreP1, setScoreP1] = useState<string>("");
   const [scoreP2, setScoreP2] = useState<string>("");
   const [scoreP3, setScoreP3] = useState<string>("");
@@ -34,16 +33,39 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   const [showWinDialog, setShowWinDialog] = useState<boolean>(false);
   const [showCardDialog, setShowCardDialog] = useState<boolean>(false);
   const [gameStarted, setGameStarted] = useState<boolean>(false);
-  const { scores, players, token, player_1_name, round_status, board_status } =
-    props.board;
+  const {
+    scores,
+    players,
+    token,
+    player1_name,
+    round_status,
+    board_status,
+    round_card_number,
+    curr_round_left,
+  } = props.board;
+  const prevRoundStatus = useRef<string>("");
 
   useEffect(() => {
-    setIsAdmin(player_1_name === user?.name);
+    prevRoundStatus.current = board_status;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    setIsAdmin(player1_name === user?.name);
     setShowWinDialog(round_status === RoundStatus.waiting_wins_asked.name);
     setShowCardDialog(round_status === RoundStatus.waiting_card_throw.name);
     setGameStarted(board_status === BoardStatus.in_course.name);
+    setRoundCardNumber(round_card_number);
+
+    if (prevRoundStatus.current !== round_status) {
+      prevRoundStatus.current === RoundStatus.waiting_card_throw.name &&
+        setCards([]);
+
+      prevRoundStatus.current = round_status;
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.board]);
 
   useEffect(() => {
     setScoreP1(scores[0]);
@@ -52,9 +74,9 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     setScoreP4(scores[3]);
   }, [scores]);
 
-  const finishCardRoundAction = () => {
+  const finishCardRoundAction = (n: number) => {
     if (token) {
-      endCardRound(token).then((response) => {
+      endCardRound(token, n).then((response) => {
         showSuccessMessage(response.message);
       });
     }
@@ -64,7 +86,6 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     if (token) {
       startGame(token).then((response) => {
         showSuccessMessage(response.message);
-        props.forceUpdate(Math.random());
       });
     }
   };
@@ -73,7 +94,6 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     if (token) {
       setWins(token, wins).then((response) => {
         showSuccessMessage(response.message);
-        props.forceUpdate(Math.random());
       });
     }
   };
@@ -82,13 +102,12 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     if (token) {
       startCardThrow(token).then((response) => {
         showSuccessMessage(response.message);
-        props.forceUpdate(Math.random());
       });
     }
   };
 
-  const getCardAction = (n: number) => {
-    getCards(n).then((response) => {
+  const getCardAction = () => {
+    getCards(token).then((response) => {
       showSuccessMessage(response.message);
       setCards(response.content);
     });
@@ -102,9 +121,17 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     }
   };
 
-  const throwCardAction = (card: string) => {
+  const throwCardAction = () => {
+    let card = cards[cardNumber - 1];
+
+    if (!card) {
+      showErrorMessage("Carta no existe");
+      return;
+    }
+
     if (token) {
       throwCard(token, card).then((response) => {
+        setCards((currCards) => currCards.filter((cardD) => cardD !== card));
         showSuccessMessage(response.message);
       });
     }
@@ -124,7 +151,7 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
           }}
         >
           {cards.length === 0 && (
-            <Button variant="outlined" onClick={() => getCardAction(3)}>
+            <Button variant="outlined" onClick={() => getCardAction()}>
               Pedir Cartas
             </Button>
           )}
@@ -145,17 +172,18 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                   gap: "6px",
                 }}
               >
-                {cards.map((card) => (
-                  <div
-                    style={{
-                      backgroundColor: "lightgray",
-                      width: "90px",
-                      height: "60px",
-                    }}
-                  >
-                    {card}
-                  </div>
-                ))}
+                {cards &&
+                  cards.map((card) => (
+                    <div
+                      style={{
+                        backgroundColor: "lightgray",
+                        width: "90px",
+                        height: "60px",
+                      }}
+                    >
+                      {card}
+                    </div>
+                  ))}
               </div>
             </div>
           )}
@@ -195,10 +223,7 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                 value={cardNumber}
                 setValue={setCardNumber}
               />
-              <Button
-                variant="outlined"
-                onClick={() => throwCardAction(cards[cardNumber - 1])}
-              >
+              <Button variant="outlined" onClick={() => throwCardAction()}>
                 Throw Card
               </Button>
             </div>
@@ -210,12 +235,33 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
           <h3>Admin Actions:</h3>
           <div style={{ display: "flex", flexDirection: "row", gap: "9px" }}>
             {showCardDialog && (
-              <Button
-                variant="outlined"
-                onClick={() => finishCardRoundAction()}
-              >
-                Finish Card Throw Round
-              </Button>
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    maxWidth: "200px",
+                  }}
+                >
+                  <h3>Finish Card Throw Round</h3>
+                  {curr_round_left === 1 && (
+                    <FormNumberField
+                      title="Next Round Card number?"
+                      label="cardNumber"
+                      name="card number"
+                      value={roundCardNumber}
+                      setValue={setRoundCardNumber}
+                    />
+                  )}
+
+                  <Button
+                    variant="outlined"
+                    onClick={() => finishCardRoundAction(roundCardNumber)}
+                  >
+                    Confirm
+                  </Button>
+                </div>
+              </>
             )}
             {!gameStarted && (
               <Button variant="outlined" onClick={() => startGameAction()}>

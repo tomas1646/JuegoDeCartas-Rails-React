@@ -1,10 +1,10 @@
 class Board < ApplicationRecord
-  validates :player_1_id, :players, presence: true
+  validates :player1, :players, presence: true
 
-  belongs_to :player_1, class_name: 'User'
-  belongs_to :player_2, class_name: 'User', optional: true
-  belongs_to :player_3, class_name: 'User', optional: true
-  belongs_to :player_4, class_name: 'User', optional: true
+  belongs_to :player1, class_name: 'User'
+  belongs_to :player2, class_name: 'User', optional: true
+  belongs_to :player3, class_name: 'User', optional: true
+  belongs_to :player4, class_name: 'User', optional: true
 
   before_create :set_token
 
@@ -12,10 +12,10 @@ class Board < ApplicationRecord
     waiting_players: 0,
     full: 1,
     in_course: 2,
-    player_1_win: 3,
-    player_2_win: 4,
-    player_3_win: 5,
-    player_4_win: 6
+    player1_win: 3,
+    player2_win: 4,
+    player3_win: 5,
+    player4_win: 6
   }
 
   enum round_status: {
@@ -24,10 +24,10 @@ class Board < ApplicationRecord
   }
 
   def json
-    { player_1_name: player_1.name,
-      player_2_name: player_2 ? player_2.name : '',
-      player_3_name: player_3 ? player_3.name : '',
-      player_4_name: player_4 ? player_4.name : '',
+    { player1_name: player1.name,
+      player2_name: player2 ? player2.name : '',
+      player3_name: player3 ? player3.name : '',
+      player4_name: player4 ? player4.name : '',
       board_status:, round_status: round_status || '',
       token:, players:,
       round_card_number:, curr_round_left:,
@@ -49,7 +49,7 @@ class Board < ApplicationRecord
   end
 
   def is_player_in_board(user)
-    player_1 == user || player_2 == user || player_3 == user || player_4 == user
+    player1 == user || player2 == user || player3 == user || player4 == user
   end
 
   def start_game
@@ -61,10 +61,10 @@ class Board < ApplicationRecord
   def set_player_win(user, win_number)
     winsArray = JSON.parse wins
 
-    winsArray[0] = win_number if player_1 === user
-    winsArray[1] = win_number if player_2 === user
-    winsArray[2] = win_number if player_3 === user
-    winsArray[3] = win_number if player_4 === user
+    winsArray[0] = win_number if player1 === user
+    winsArray[1] = win_number if player2 === user
+    winsArray[2] = win_number if player3 === user
+    winsArray[3] = win_number if player4 === user
 
     self.wins = winsArray.to_json
   end
@@ -73,22 +73,22 @@ class Board < ApplicationRecord
     card_array = JSON.parse cards
     map_player_cards = JSON.parse player_cards
 
-    if user == player_1
+    if user == player1
       card_array[0] = card
       map_player_cards['1'].delete(card)
     end
 
-    if user == player_2
+    if user == player2
       card_array[1] = card
       map_player_cards['2'].delete(card)
     end
 
-    if user == player_3
+    if user == player3
       card_array[2] = card
       map_player_cards['3'].delete(card)
     end
 
-    if user == player_4
+    if user == player4
       card_array[3] = card
       map_player_cards['4'].delete(card)
     end
@@ -98,14 +98,14 @@ class Board < ApplicationRecord
   end
 
   def join_board(user)
-    if player_2.blank?
-      self.player_2 = user
+    if player2.blank?
+      self.player2 = user
       self.players = 2
-    elsif player_3.blank?
-      self.player_3 = user
+    elsif player3.blank?
+      self.player3 = user
       self.players = 3
     else
-      self.player_4 = user
+      self.player4 = user
       self.players = 4
       self.board_status = :full
     end
@@ -129,10 +129,10 @@ class Board < ApplicationRecord
     card_array = []
     map_player_cards = JSON.parse player_cards
 
-    card_array = map_player_cards['1'] if user == player_1
-    card_array = map_player_cards['2'] if user == player_2
-    card_array = map_player_cards['3'] if user == player_3
-    card_array = map_player_cards['4'] if user == player_4
+    card_array = map_player_cards['1'] if user == player1
+    card_array = map_player_cards['2'] if user == player2
+    card_array = map_player_cards['3'] if user == player3
+    card_array = map_player_cards['4'] if user == player4
 
     card_array
   end
