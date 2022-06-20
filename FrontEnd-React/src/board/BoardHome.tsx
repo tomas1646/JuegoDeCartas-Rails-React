@@ -1,18 +1,18 @@
-import { Divider, Button } from "@mui/material";
+import { Divider } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ButtonPanel from "../components/ButtonPanel";
+import ButtonPanel, { DefaultButton } from "../components/ButtonPanel";
 import { showErrorMessage, showSuccessMessage } from "../components/SnackBar";
 import FormTextField from "../components/TextField";
 import { Title, Text } from "../components/Title";
 import { createGame, joinGame, Board, getBoards } from "./boardService";
+import { BoardStatus } from "./BoardTypes";
 
 export default function BoardHome() {
   const navigate = useNavigate();
   const [boardId, setBoardId] = useState<string>("");
-  const [players, setPlayers] = useState<number>(1);
-  const [boards, setBoards] = useState<Board[]>([]);
-  //const [userOpenBoards, setUserOpenBoards] = useState<Board[]>([]);
+  const [boardsWaitingPlayer, setBoardsWaitingPlayers] = useState<Board[]>([]);
+  const [userOpenBoards, setUserOpenBoards] = useState<Board[]>([]);
 
   useEffect(() => {
     fetchData();
@@ -20,15 +20,25 @@ export default function BoardHome() {
   }, []);
 
   function fetchData() {
-    getBoards()
-      .then((response) => setBoards(response.content))
+    getBoards(false, [BoardStatus.waiting_players.number])
+      .then((response) => setBoardsWaitingPlayers(response.content))
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
+
+    getBoards(true, [
+      BoardStatus.waiting_players.number,
+      BoardStatus.full.number,
+      BoardStatus.in_course.number,
+    ])
+      .then((response) => setUserOpenBoards(response.content))
       .catch((err) =>
         showErrorMessage(err.response.data.message || "Unexcpected Error")
       );
   }
 
   const handleNewGameButton = () => {
-    createGame(players)
+    createGame()
       .then((response) => {
         showSuccessMessage(response.message);
         navigate("/board/" + response.content.token);
@@ -78,7 +88,7 @@ export default function BoardHome() {
       <Divider style={{ marginTop: "30px", marginBottom: "30px" }} />
       <Title text="Your Games In Course" />
 
-      {/*userOpenBoards &&
+      {userOpenBoards &&
         userOpenBoards.map((board) => (
           <div
             style={{
@@ -89,21 +99,18 @@ export default function BoardHome() {
             key={"1-" + board.token}
           >
             <Text text={"Board Id: " + board.token} />
-            <Text text={"Status: " + board.status} />
-            <Button
-              variant="outlined"
-              style={{ height: "30px" }}
+            <Text text={"Status: " + board.board_status} />
+            <DefaultButton
+              text="Copy Id"
               onClick={() => setBoardId(board.token)}
-            >
-              Copy Id
-            </Button>
+            />
           </div>
-          ))*/}
+        ))}
       <Divider style={{ marginTop: "30px", marginBottom: "30px" }} />
       <Title text="Games waiting for players" />
 
-      {boards &&
-        boards.map((board) => (
+      {boardsWaitingPlayer &&
+        boardsWaitingPlayer.map((board) => (
           <div
             style={{
               display: "flex",
@@ -113,13 +120,10 @@ export default function BoardHome() {
             key={"2-" + board.token}
           >
             <Text text={"Board Id: " + board.token} />
-            <Button
-              variant="outlined"
-              style={{ height: "30px" }}
+            <DefaultButton
+              text="Copy Id"
               onClick={() => setBoardId(board.token)}
-            >
-              Copy Id
-            </Button>
+            />
           </div>
         ))}
     </>

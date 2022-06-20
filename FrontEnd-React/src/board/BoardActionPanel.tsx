@@ -1,11 +1,13 @@
-import { Button, Divider, Paper } from "@mui/material";
+import { Divider, Paper } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
+import { DefaultButton } from "../components/ButtonPanel";
 import { showSuccessMessage, showErrorMessage } from "../components/SnackBar";
 import FormTextField, { FormNumberField } from "../components/TextField";
 import { useSessionUser } from "../store/userStore";
 import {
   Board,
   endCardRound,
+  finishGame,
   getCards,
   setWins,
   startCardThrow,
@@ -14,6 +16,7 @@ import {
   updateScores,
 } from "./boardService";
 import { BoardStatus, RoundStatus } from "./BoardTypes";
+import { Card } from "./ShowBoard";
 
 interface BoardActionPanelProps {
   board: Board;
@@ -24,6 +27,7 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   const [win, setWin] = useState<number>(0);
   const [cards, setCards] = useState<string[]>([]);
   const [cardNumber, setCardNumber] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [winnerNumber, setWinnerNumber] = useState<1 | 2 | 3 | 4>(1);
   const [roundCardNumber, setRoundCardNumber] = useState<number>(0);
   const [scoreP1, setScoreP1] = useState<string>("");
   const [scoreP2, setScoreP2] = useState<string>("");
@@ -85,72 +89,103 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   }, [prevRoundCardNumber.current]);
 
   const finishCardRoundAction = (n: number) => {
-    if (token) {
-      endCardRound(token, n).then((response) => {
+    endCardRound(token, n)
+      .then((response) => {
         showSuccessMessage(response.message);
-      });
-    }
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   const startGameAction = () => {
-    if (token) {
-      startGame(token).then((response) => {
+    startGame(token)
+      .then((response) => {
         showSuccessMessage(response.message);
-      });
-    }
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   const winNumberAction = (wins: number) => {
-    if (token) {
-      setWins(token, wins).then((response) => {
+    setWins(token, wins)
+      .then((response) => {
         showSuccessMessage(response.message);
-      });
-    }
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   const startCardThrowAction = () => {
-    if (token) {
-      startCardThrow(token).then((response) => {
+    startCardThrow(token)
+      .then((response) => {
         showSuccessMessage(response.message);
-      });
-    }
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   const getCardAction = () => {
-    getCards(token).then((response) => {
-      showSuccessMessage(response.message);
-      setCards(response.content);
-    });
+    getCards(token)
+      .then((response) => {
+        showSuccessMessage(response.message);
+        setCards(response.content);
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   const updateScoresAction = (scores: string[]) => {
-    if (token) {
-      updateScores(token, scores).then((response) => {
+    updateScores(token, scores)
+      .then((response) => {
         showSuccessMessage(response.message);
-      });
-    }
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
+  };
+
+  const finishGameAction = () => {
+    finishGame(token, winnerNumber)
+      .then((response) => {
+        showSuccessMessage(response.message);
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   const throwCardAction = () => {
     let card = cards[cardNumber - 1];
 
     if (!card) {
-      showErrorMessage("Carta no existe");
+      showErrorMessage("Card doesnt exists");
       return;
     }
 
-    if (token) {
-      throwCard(token, card).then((response) => {
+    throwCard(token, card)
+      .then((response) => {
         setCards((currCards) => currCards.filter((cardD) => cardD !== card));
         showSuccessMessage(response.message);
-      });
-    }
+      })
+      .catch((err) =>
+        showErrorMessage(err.response.data.message || "Unexcpected Error")
+      );
   };
 
   return (
     <Paper
       elevation={2}
-      style={{ padding: 6, display: "flex", flexDirection: "column" }}
+      style={{
+        padding: 6,
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+      }}
     >
       {gameStarted && (
         <div
@@ -158,13 +193,12 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
             display: "flex",
             flexDirection: "row",
             gap: "30px",
+            alignItems: "center",
           }}
         >
           {cards.length === 0 && (
             <>
-              <Button variant="outlined" onClick={() => getCardAction()}>
-                Pedir Cartas
-              </Button>
+              <DefaultButton text="Get Cards" onClick={() => getCardAction()} />
               <Divider orientation="vertical" flexItem />
             </>
           )}
@@ -175,6 +209,7 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                   display: "flex",
                   flexDirection: "column",
                   gap: "6px",
+                  alignItems: "center",
                 }}
               >
                 <h3>Cards</h3>
@@ -186,21 +221,34 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                     gap: "6px",
                   }}
                 >
-                  {cards &&
-                    cards.map((card) => (
-                      <div
-                        style={{
-                          backgroundColor: "lightgray",
-                          width: "90px",
-                          height: "60px",
-                        }}
-                      >
-                        {card}
-                      </div>
-                    ))}
+                  {cards && cards.map((card) => <Card card={card} />)}
                 </div>
               </div>
               <Divider orientation="vertical" flexItem />
+              {showCardDialog && (
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    maxWidth: "200px",
+                    gap: "7px",
+                    alignItems: "center",
+                  }}
+                >
+                  <FormNumberField
+                    title="Throw Cards"
+                    label="Card Number"
+                    name="card_number"
+                    value={cardNumber}
+                    setValue={setCardNumber}
+                  />
+                  <DefaultButton
+                    text="Throw Card"
+                    onClick={() => throwCardAction()}
+                    style={{ width: "100%" }}
+                  />
+                </div>
+              )}
             </>
           )}
 
@@ -209,6 +257,7 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
               style={{
                 display: "flex",
                 flexDirection: "column",
+                gap: "7px",
                 maxWidth: "200px",
               }}
             >
@@ -219,37 +268,26 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                 value={win}
                 setValue={setWin}
               />
-              <Button variant="outlined" onClick={() => winNumberAction(win)}>
-                Confirm
-              </Button>
-            </div>
-          )}
-          {showCardDialog && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                maxWidth: "200px",
-              }}
-            >
-              <FormNumberField
-                title="Throw Cards"
-                label="Card Number"
-                name="card_number"
-                value={cardNumber}
-                setValue={setCardNumber}
+              <DefaultButton
+                text="Confirm"
+                onClick={() => winNumberAction(win)}
               />
-              <Button variant="outlined" onClick={() => throwCardAction()}>
-                Throw Card
-              </Button>
             </div>
           )}
         </div>
       )}
       {isAdmin && (
         <>
+          <Divider />
           <h3>Admin Actions:</h3>
-          <div style={{ display: "flex", flexDirection: "row", gap: "9px" }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: "9px",
+              alignItems: "center",
+            }}
+          >
             {showCardDialog && (
               <>
                 <div
@@ -257,6 +295,8 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                     display: "flex",
                     flexDirection: "column",
                     maxWidth: "200px",
+                    gap: "3px",
+                    alignItems: "center",
                   }}
                 >
                   <h3>Finish Card Throw Round</h3>
@@ -269,33 +309,29 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                       setValue={setRoundCardNumber}
                     />
                   )}
-
-                  <Button
-                    variant="outlined"
+                  <DefaultButton
+                    text="Confirm"
                     onClick={() => finishCardRoundAction(roundCardNumber)}
-                  >
-                    Confirm
-                  </Button>
+                  />
                 </div>
                 <Divider orientation="vertical" flexItem />
               </>
             )}
             {!gameStarted && (
               <>
-                <Button variant="outlined" onClick={() => startGameAction()}>
-                  Empezar juego
-                </Button>
+                <DefaultButton
+                  text="Start Game"
+                  onClick={() => startGameAction()}
+                />
                 <Divider orientation="vertical" flexItem />
               </>
             )}
             {showWinDialog && (
               <>
-                <Button
-                  variant="outlined"
+                <DefaultButton
+                  text="Start Throwing Cards"
                   onClick={() => startCardThrowAction()}
-                >
-                  Empezar a tirar cartas
-                </Button>
+                />
                 <Divider orientation="vertical" flexItem />
               </>
             )}
@@ -338,14 +374,36 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                   setValue={setScoreP4}
                 />
               )}
-              <Button
-                variant="outlined"
+              <DefaultButton
+                text="Update Scores"
                 onClick={() =>
                   updateScoresAction([scoreP1, scoreP2, scoreP3, scoreP4])
                 }
-              >
-                Update Scores
-              </Button>
+              />
+            </div>
+            <Divider orientation="vertical" flexItem />
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                maxWidth: "200px",
+                gap: "3px",
+              }}
+            >
+              <h3>Finish Game</h3>
+
+              <FormNumberField
+                title="Who won?"
+                label="winnerNumber"
+                name="winner Number"
+                value={winnerNumber}
+                setValue={setWinnerNumber}
+              />
+
+              <DefaultButton
+                text="Confirm"
+                onClick={() => finishGameAction()}
+              />
             </div>
           </div>
         </>

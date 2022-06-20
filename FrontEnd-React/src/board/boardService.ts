@@ -20,15 +20,27 @@ export interface Board {
   curr_round_left: number;
 }
 
-export async function createGame(players: number): Promise<ApiResponse<Board>> {
-  const response: ApiResponse<Board> = (await axios.post(boardUrl, { players }))
-    .data;
+export async function createGame(): Promise<ApiResponse<Board>> {
+  const response: ApiResponse<Board> = (await axios.post(boardUrl)).data;
 
   return response;
 }
 
-export async function getBoards(): Promise<ApiResponse<Board[]>> {
-  const response: ApiResponse<Board[]> = (await axios.get(boardUrl)).data;
+export async function getBoards(
+  searchUser?: boolean,
+  status?: number[]
+): Promise<ApiResponse<Board[]>> {
+  let queryParams = "?";
+
+  if (searchUser) {
+    queryParams += "user&";
+  }
+  status &&
+    status.forEach((state) => (queryParams += `board_status[]=${state}&`));
+
+  const response: ApiResponse<Board[]> = (
+    await axios.get(boardUrl + queryParams)
+  ).data;
 
   return response;
 }
@@ -123,6 +135,19 @@ export async function endCardRound(
   const response: ApiResponse<Board> = (
     await axios.post(`${boardUrl}/${boardToken}/end_card_round`, {
       round_card_number,
+    })
+  ).data;
+
+  return response;
+}
+
+export async function finishGame(
+  boardToken: string,
+  winner: number
+): Promise<ApiResponse<Board>> {
+  const response: ApiResponse<Board> = (
+    await axios.post(`${boardUrl}/${boardToken}/finish_game`, {
+      winner,
     })
   ).data;
 

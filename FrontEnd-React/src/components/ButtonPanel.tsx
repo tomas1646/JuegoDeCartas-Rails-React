@@ -5,6 +5,7 @@ interface ButtonProps {
   onClick?: (e?: any) => void;
   submit?: boolean;
   text: string;
+  style?: React.CSSProperties;
 }
 
 interface Props {
@@ -22,15 +23,26 @@ export default function ButtonPanel(props: Props) {
       }}
     >
       {props.button.map((button, index) => (
-        <Button
+        <DefaultButton
           key={button.text + index}
-          type={button.submit ? "submit" : "button"}
-          variant="outlined"
           onClick={button.onClick}
-        >
-          {button.text}
-        </Button>
+          text={button.text}
+          style={button.style}
+        />
       ))}
     </div>
+  );
+}
+
+export function DefaultButton(props: ButtonProps) {
+  return (
+    <Button
+      type={props.submit ? "submit" : "button"}
+      variant="contained"
+      onClick={props.onClick}
+      style={props.style}
+    >
+      {props.text}
+    </Button>
   );
 }

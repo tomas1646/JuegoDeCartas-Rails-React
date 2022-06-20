@@ -120,7 +120,11 @@ export default function Profile() {
               setValue={setRepeatPassword}
               password
             />
-            <ButtonPanel button={[{ submit: true, text: "Update Fields" }]} />
+            <ButtonPanel
+              button={[
+                { submit: true, text: "Update Fields", onClick: handleUpdate },
+              ]}
+            />
             <input type="submit" hidden />
           </form>
         </Grid>

@@ -1,4 +1,11 @@
-import { Button, Grid, Paper } from "@mui/material";
+import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
+  Avatar,
+  Grid,
+  Paper,
+} from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SubTitle, Text, Title } from "../components/Title";
@@ -6,9 +13,10 @@ import useInterval from "../components/useInterval";
 import BoardActionPanel from "./BoardActionPanel";
 import { Board, getBoard } from "./boardService";
 import { BoardStatus, RoundStatus } from "./BoardTypes";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { DefaultButton } from "../components/ButtonPanel";
 
 export default function ShowBoard() {
-  const navigate = useNavigate();
   const { token } = useParams();
   const [board, setBoard] = useState<Board>();
   const [gameFinished, setGameFinished] = useState<boolean>(false);
@@ -40,15 +48,63 @@ export default function ShowBoard() {
 
   return board ? (
     <>
-      <Button onClick={() => navigate(-1)}>Atras</Button>
       <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
         <StatsPanel board={board} />
         <GamePanel board={board} />
-        <BoardActionPanel board={board} />
+        {!gameFinished && <BoardActionPanel board={board} />}
       </div>
     </>
   ) : (
     <h1>Loading</h1>
+  );
+}
+
+interface CardProps {
+  card: string;
+}
+
+export function Card(props: CardProps) {
+  const stringSplitted = props.card.split("-");
+  const cardNumber = stringSplitted[0];
+  const cardType = stringSplitted[1];
+  const cardImgUrl = getCardImage();
+
+  function getCardImage(): string {
+    switch (cardType) {
+      case "Or":
+        return "oro.png";
+      case "Ba":
+        return "basto.png";
+      case "Es":
+        return "espada.png";
+      default:
+        return "copa.png";
+    }
+  }
+
+  return (
+    <Paper
+      elevation={15}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-evenly",
+        width: "70px",
+        height: "90px",
+      }}
+    >
+      <h3>{cardNumber}</h3>
+
+      <Avatar
+        alt="Type"
+        src={require("../static/" + cardImgUrl)}
+        variant="square"
+        sx={{ height: 50, width: 50 }}
+        imgProps={{
+          style: { objectFit: "contain" },
+        }}
+      />
+    </Paper>
   );
 }
 
@@ -67,29 +123,44 @@ function StatsPanel(props: StatsPanelProps) {
     player4_name,
     players,
   } = props.board;
+  const navigate = useNavigate();
   return (
     <>
-      <Paper style={{ padding: 6 }} elevation={2}>
-        <Title text="Board" />
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <div
+            style={{
+              width: "95%",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Title text="Board" />
 
-        <Grid container>
-          <Grid item md={6} xs={12}>
-            <SubTitle text={"Board Id: " + token} />
-            <SubTitle text={"Players: " + players} />
-            <SubTitle text={"Board Status: " + board_status} />
-            {board_status !== "Waiting_Players" && (
-              <SubTitle text={"Round Status: " + round_status} />
-            )}
-          </Grid>
+            <DefaultButton text="Go Back" onClick={() => navigate(-1)} />
+          </div>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Grid container>
+            <Grid item md={6} xs={12}>
+              <SubTitle text={"Board Id: " + token} />
+              <SubTitle text={"Players: " + players} />
+              <SubTitle text={"Board Status: " + board_status} />
+              {board_status === BoardStatus.in_course.name && (
+                <SubTitle text={"Round Status: " + round_status} />
+              )}
+            </Grid>
 
-          <Grid item md={6} xs={12}>
-            <SubTitle text={"Player 1: " + player1_name} />
-            {player2_name && <SubTitle text={"Player 2: " + player2_name} />}
-            {player3_name && <SubTitle text={"Player 3: " + player3_name} />}
-            {player4_name && <SubTitle text={"Player 4: " + player4_name} />}
+            <Grid item md={6} xs={12}>
+              <SubTitle text={"Player 1: " + player1_name} />
+              {player2_name && <SubTitle text={"Player 2: " + player2_name} />}
+              {player3_name && <SubTitle text={"Player 3: " + player3_name} />}
+              {player4_name && <SubTitle text={"Player 4: " + player4_name} />}
+            </Grid>
           </Grid>
-        </Grid>
-      </Paper>
+        </AccordionDetails>
+      </Accordion>
     </>
   );
 }
@@ -150,25 +221,35 @@ function GamePanel(props: GamePanelProps) {
                 display: "grid",
                 gridTemplateColumns: `1fr 1fr 1fr`,
                 gridTemplateRows: `1fr 1fr 1fr`,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               {round_status === RoundStatus.waiting_wins_asked.name ? (
                 <>
                   {players >= 3 && (
-                    <h3 style={{ gridColumn: 2, gridRow: 1 }}>
+                    <h3
+                      style={{ gridColumn: 2, gridRow: 1, textAlign: "center" }}
+                    >
                       {wins[2] ? wins[2] : "Waiting Player 3"}
                     </h3>
                   )}
-                  <h3 style={{ gridColumn: 1, gridRow: 2 }}>
+                  <h3
+                    style={{ gridColumn: 1, gridRow: 2, textAlign: "center" }}
+                  >
                     {wins[0] ? wins[0] : "Waiting Player 1"}
                   </h3>
                   {players >= 2 && (
-                    <h3 style={{ gridColumn: 3, gridRow: 2 }}>
+                    <h3
+                      style={{ gridColumn: 3, gridRow: 2, textAlign: "center" }}
+                    >
                       {wins[1] ? wins[1] : "Waiting Player 2"}
                     </h3>
                   )}
                   {players === 4 && (
-                    <h3 style={{ gridColumn: 2, gridRow: 3 }}>
+                    <h3
+                      style={{ gridColumn: 2, gridRow: 3, textAlign: "center" }}
+                    >
                       {wins[3] ? wins[3] : "Waiting Player 4"}
                     </h3>
                   )}
@@ -176,22 +257,72 @@ function GamePanel(props: GamePanelProps) {
               ) : (
                 <>
                   {players >= 3 && (
-                    <h3 style={{ gridColumn: 2, gridRow: 1 }}>
-                      {cards[2] ? cards[2] : "Waiting Player 3"}
-                    </h3>
+                    <div
+                      style={{
+                        gridColumn: 2,
+                        gridRow: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {cards[2] ? (
+                        <Card card={cards[2]} />
+                      ) : (
+                        <h3 style={{ textAlign: "center" }}>
+                          Waiting Player 3
+                        </h3>
+                      )}
+                    </div>
                   )}
-                  <h3 style={{ gridColumn: 1, gridRow: 2 }}>
-                    {cards[0] ? cards[0] : "Waiting Player 1"}
-                  </h3>
+                  <div
+                    style={{
+                      gridColumn: 1,
+                      gridRow: 2,
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {cards[0] ? (
+                      <Card card={cards[0]} />
+                    ) : (
+                      <h3 style={{ textAlign: "center" }}>Waiting Player 1</h3>
+                    )}
+                  </div>
                   {players >= 2 && (
-                    <h3 style={{ gridColumn: 3, gridRow: 2 }}>
-                      {cards[1] ? cards[1] : "Waiting Player 2"}
-                    </h3>
+                    <div
+                      style={{
+                        gridColumn: 3,
+                        gridRow: 2,
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {cards[1] ? (
+                        <Card card={cards[1]} />
+                      ) : (
+                        <h3 style={{ textAlign: "center" }}>
+                          Waiting Player 2
+                        </h3>
+                      )}
+                    </div>
                   )}
                   {players === 4 && (
-                    <h3 style={{ gridColumn: 2, gridRow: 3 }}>
-                      {cards[3] ? cards[3] : "Waiting Player 4"}
-                    </h3>
+                    <div
+                      style={{
+                        gridColumn: 2,
+                        gridRow: 3,
+                        display: "flex",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {cards[3] ? (
+                        <Card card={cards[3]} />
+                      ) : (
+                        <h3 style={{ textAlign: "center" }}>
+                          Waiting Player 4
+                        </h3>
+                      )}
+                    </div>
                   )}
                 </>
               )}
@@ -243,7 +374,7 @@ function Player(props: PlayerProps) {
     <Paper
       elevation={10}
       style={{
-        height: "200px",
+        height: "150px",
         width: "320px",
         padding: 10,
         display: "grid",
@@ -252,10 +383,9 @@ function Player(props: PlayerProps) {
       }}
     >
       <SubTitle text={"Player: " + props.position?.toString()} />
-      <Text text={"Name: " + props.name} />
-      <Text text={"Going to Win:" + props.wins} />
-      <Text text={"Current Wins:"} />
-      <Text text={"Score:" + props.scores} />
+      <SubTitle text={"Name: " + props.name} />
+      <SubTitle text={"Going to Win:" + props.wins} />
+      <SubTitle text={"Score: " + props.scores} />
     </Paper>
   );
 }
