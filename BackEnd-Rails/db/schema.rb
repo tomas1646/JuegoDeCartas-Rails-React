@@ -51,7 +51,7 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_28_144939) do
     t.string "player_cards", default: "{\"1\":[],\"2\":[],\"3\":[],\"4\":[]}"
     t.integer "board_status", default: 0
     t.integer "round_status"
-    t.integer "players"
+    t.integer "players", default: 1
     t.integer "round_card_number", default: 3
     t.integer "curr_round_left", default: 3
     t.datetime "created_at", null: false

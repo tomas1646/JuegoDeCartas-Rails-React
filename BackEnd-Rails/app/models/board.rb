@@ -1,5 +1,5 @@
 class Board < ApplicationRecord
-  validates :player1, :players, presence: true
+  validates :player1, presence: true
 
   belongs_to :player1, class_name: 'User'
   belongs_to :player2, class_name: 'User', optional: true
@@ -67,6 +67,15 @@ class Board < ApplicationRecord
     winsArray[3] = win_number if player4 === user
 
     self.wins = winsArray.to_json
+  end
+
+  def did_player_throw_card?(user)
+    card_array = JSON.parse cards
+
+    return card_array[0].present? if user == player1
+    return card_array[1].present? if user == player2
+    return card_array[2].present? if user == player3
+    return card_array[3].present? if user == player4
   end
 
   def throw_card(user, card)
@@ -149,6 +158,15 @@ class Board < ApplicationRecord
     end
 
     self.player_cards = map_player_cards.to_json
+  end
+
+  def finish_game(winner)
+    self.round_status = nil
+
+    self.board_status = :player1_win if winner == 1
+    self.board_status = :player2_win if winner == 2
+    self.board_status = :player3_win if winner == 3
+    self.board_status = :player4_win if winner == 4
   end
 
   private
