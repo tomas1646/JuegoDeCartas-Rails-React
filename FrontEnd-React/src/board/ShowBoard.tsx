@@ -8,11 +8,11 @@ import {
 } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { SubTitle, Text, Title } from "../components/Title";
+import { SubTitle, Title } from "../components/Title";
 import useInterval from "../components/useInterval";
 import BoardActionPanel from "./BoardActionPanel";
 import { Board, getBoard } from "./boardService";
-import { BoardStatus, RoundStatus } from "./BoardTypes";
+import { BoardStatus } from "./BoardTypes";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { DefaultButton } from "../components/ButtonPanel";
 
@@ -116,7 +116,6 @@ function StatsPanel(props: StatsPanelProps) {
   const {
     token,
     board_status,
-    round_status,
     player1_name,
     player2_name,
     player3_name,
@@ -147,9 +146,6 @@ function StatsPanel(props: StatsPanelProps) {
               <SubTitle text={"Board Id: " + token} />
               <SubTitle text={"Players: " + players} />
               <SubTitle text={"Board Status: " + board_status} />
-              {board_status === BoardStatus.in_course.name && (
-                <SubTitle text={"Round Status: " + round_status} />
-              )}
             </Grid>
 
             <Grid item md={6} xs={12}>
@@ -179,7 +175,7 @@ function GamePanel(props: GamePanelProps) {
     cards,
     scores,
     wins,
-    round_status,
+    board_status,
   } = props.board;
 
   return (
@@ -225,7 +221,7 @@ function GamePanel(props: GamePanelProps) {
                 justifyContent: "center",
               }}
             >
-              {round_status === RoundStatus.waiting_wins_asked.name ? (
+              {board_status === BoardStatus.waiting_wins_asked.name ? (
                 <>
                   {players >= 3 && (
                     <h3

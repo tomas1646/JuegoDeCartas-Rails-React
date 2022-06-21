@@ -29,7 +29,8 @@ export default function BoardHome() {
     getBoards(true, [
       BoardStatus.waiting_players.number,
       BoardStatus.full.number,
-      BoardStatus.in_course.number,
+      BoardStatus.waiting_wins_asked.number,
+      BoardStatus.waiting_card_throw.number,
     ])
       .then((response) => setUserOpenBoards(response.content))
       .catch((err) =>

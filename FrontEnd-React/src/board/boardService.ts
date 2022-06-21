@@ -11,7 +11,6 @@ export interface Board {
   player3_name: string;
   player4_name: string;
   board_status: string;
-  round_status: string;
   cards: string[];
   scores: string[];
   wins: string[];

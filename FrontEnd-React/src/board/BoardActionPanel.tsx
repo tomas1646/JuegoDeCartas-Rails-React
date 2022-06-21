@@ -15,7 +15,7 @@ import {
   throwCard,
   updateScores,
 } from "./boardService";
-import { BoardStatus, RoundStatus } from "./BoardTypes";
+import { BoardStatus } from "./BoardTypes";
 import { Card } from "./ShowBoard";
 
 interface BoardActionPanelProps {
@@ -42,7 +42,6 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     players,
     token,
     player1_name,
-    round_status,
     board_status,
     round_card_number,
     curr_round_left,
@@ -57,19 +56,22 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
 
   useEffect(() => {
     setIsAdmin(player1_name === user?.name);
-    setShowWinDialog(round_status === RoundStatus.waiting_wins_asked.name);
-    setShowCardDialog(round_status === RoundStatus.waiting_card_throw.name);
-    setGameStarted(board_status === BoardStatus.in_course.name);
+    setShowWinDialog(board_status === BoardStatus.waiting_wins_asked.name);
+    setShowCardDialog(board_status === BoardStatus.waiting_card_throw.name);
+    setGameStarted(
+      board_status === BoardStatus.waiting_card_throw.name ||
+        board_status === BoardStatus.waiting_wins_asked.name
+    );
 
     if (prevRoundCardNumber.current !== round_card_number) {
       prevRoundCardNumber.current = round_card_number;
     }
 
-    if (prevRoundStatus.current !== round_status) {
-      prevRoundStatus.current === RoundStatus.waiting_card_throw.name &&
+    if (prevRoundStatus.current !== board_status) {
+      prevRoundStatus.current === BoardStatus.waiting_card_throw.name &&
         setCards([]);
 
-      prevRoundStatus.current = round_status;
+      prevRoundStatus.current = board_status;
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -221,7 +223,10 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                     gap: "6px",
                   }}
                 >
-                  {cards && cards.map((card) => <Card card={card} />)}
+                  {cards &&
+                    cards.map((card, index) => (
+                      <Card key={index} card={card} />
+                    ))}
                 </div>
               </div>
               <Divider orientation="vertical" flexItem />
