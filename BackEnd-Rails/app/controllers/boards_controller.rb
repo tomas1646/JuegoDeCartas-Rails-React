@@ -43,7 +43,7 @@ class BoardsController < ApplicationController
   end
 
   def start_game
-    render_error_response({}, 'There is only one player. Cant start game.') if @board.players == 1
+    return render_error_response({}, 'There is only one player. Cant start game.') if @board.players == 1
 
     @board.start_game
 
@@ -57,7 +57,7 @@ class BoardsController < ApplicationController
   def start_card_round
     render_error_response({}, "Board isn't waiting for wins") unless @board.waiting_wins_asked?
 
-    @board.round_status = :waiting_card_throw
+    @board.board_status = :waiting_card_throw
 
     if @board.save
       render_success_response(@board.json, 'Board status change to Waiting Card Throw')
@@ -103,9 +103,7 @@ class BoardsController < ApplicationController
   end
 
   def cards
-    card_array = @board.get_player_cards @user
-
-    render_success_response(card_array)
+    render_success_response(@board.get_player_cards(@user))
   end
 
   def set_wins

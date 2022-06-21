@@ -9,9 +9,9 @@ class Deck
   def initialize
     array = []
 
-    ['-Or', '-Ba', '-Es', '-Co'].map do |i|
-      12.times do |j|
-        array.push((j + 1).to_s + i)
+    ['-Or', '-Ba', '-Es', '-Co'].each do |i|
+      (1..12).each do |j|
+        array.push(j.to_s + i)
       end
     end
 
