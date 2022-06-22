@@ -1,55 +1,70 @@
 class Board < ApplicationRecord
   MAXPLAYERS = 4
-  validates :player1, presence: true
 
-  belongs_to :player1, class_name: 'User'
-  belongs_to :player2, class_name: 'User', optional: true
-  belongs_to :player3, class_name: 'User', optional: true
-  belongs_to :player4, class_name: 'User', optional: true
+  has_many :board_players
+  has_many :players, through: :board_players, source: :user
 
   before_create :set_token
 
-  enum board_status: {
+  enum status: {
     waiting_players: 0,
     full: 1,
     waiting_wins_asked: 2,
     waiting_card_throw: 3,
-    player1_win: 4,
-    player2_win: 5,
-    player3_win: 6,
-    player4_win: 7
+    finished: 4
   }
 
   def json
-    { player1_name: player1.name,
-      player2_name: player2 ? player2.name : '',
-      player3_name: player3 ? player3.name : '',
-      player4_name: player4 ? player4.name : '',
-      board_status:, token:, players:,
+    json = {
+      status:, token:, winner: winner || '',
+      players: players.size,
       round_card_number:, curr_round_left:,
-      wins: JSON.parse(wins),
-      scores: JSON.parse(score),
-      cards: JSON.parse(cards) }
+      wins: wins.present? ? JSON.parse(wins) : [],
+      scores: score.present? ? JSON.parse(score) : [],
+      cards: cards.present? ? JSON.parse(cards) : []
+    }
+
+    players.each_with_index do |player, index|
+      json["player#{index + 1}_name".to_sym] = player.name
+    end
+
+    json
   end
 
   def reset_cards
-    self.cards = '["","","",""]'
+    empty_arr = []
+    players.size.times do
+      empty_arr.push('')
+    end
+    self.cards = empty_arr.to_json
   end
 
   def reset_wins
-    self.wins = '["","","",""]'
+    empty_arr = []
+    players.size.times do
+      empty_arr.push('')
+    end
+    self.wins = empty_arr.to_json
   end
 
   def reset_player_cards
-    self.player_cards = '{"p1":[],"p2":[],"p3":[],"p4":[]}'
+    empty_hash = {}
+    1.upto(players.size) do |i|
+      empty_hash["p#{i}".to_sym] = []
+    end
+    self.player_cards = empty_hash
   end
 
   def is_player_in_board(user)
-    player1 == user || player2 == user || player3 == user || player4 == user
+    players.include?(user)
   end
 
   def start_game
-    self.board_status = :waiting_wins_asked
+    self.status = :waiting_wins_asked
+    reset_cards
+    reset_wins
+    reset_player_cards
+
     deal_cards
   end
 
@@ -57,8 +72,8 @@ class Board < ApplicationRecord
     winsArray = JSON.parse wins
     user_id = user.id
 
-    players.times do |i|
-      winsArray[i] = win_number if user_id == read_attribute("player#{i + 1}_id")
+    players.each_with_index do |player, index|
+      winsArray[index] = win_number if player == user
     end
 
     self.wins = winsArray.to_json
@@ -68,8 +83,8 @@ class Board < ApplicationRecord
     card_array = JSON.parse cards
     user_id = user.id
 
-    players.times do |i|
-      return card_array[i].present? if user_id == read_attribute("player#{i + 1}_id")
+    players.each_with_index do |player, index|
+      return card_array[index].present? if player == user
     end
   end
 
@@ -78,10 +93,10 @@ class Board < ApplicationRecord
     map_player_cards = JSON.parse player_cards, symbolize_names: true
     user_id = user.id
 
-    players.times do |i|
-      if user_id == read_attribute("player#{i + 1}_id")
-        card_array[i] = card
-        map_player_cards["p#{i + 1}".to_sym].delete(card)
+    players.each_with_index do |player, index|
+      if player == user
+        card_array[index] = card
+        map_player_cards["p#{index + 1}".to_sym].delete(card)
       end
     end
 
@@ -90,19 +105,12 @@ class Board < ApplicationRecord
   end
 
   def join_board(user)
-    1.upto(MAXPLAYERS) do |i|
-      next unless read_attribute("player#{i}_id").blank?
-
-      send("player#{i}=", user)
-      self.players += 1
-      self.board_status = :full if MAXPLAYERS == i
-      return
-    end
+    players.push(user)
   end
 
   def finish_round(new_round_number)
     if curr_round_left == 1
-      self.board_status = :waiting_wins_asked
+      self.status = :waiting_wins_asked
       self.round_card_number = new_round_number
       self.curr_round_left = new_round_number
       reset_wins
@@ -119,8 +127,8 @@ class Board < ApplicationRecord
     map_player_cards = JSON.parse player_cards, symbolize_names: true
     user_id = user.id
 
-    players.times do |i|
-      card_array = map_player_cards["p#{i + 1}".to_sym] if user_id == read_attribute("player#{i + 1}_id")
+    players.each_with_index do |player, index|
+      return map_player_cards["p#{index + 1}".to_sym] if player == user
     end
 
     card_array
@@ -129,7 +137,7 @@ class Board < ApplicationRecord
   def deal_cards
     map_player_cards = {}
 
-    1.upto(players) do |i|
+    1.upto(players.size) do |i|
       cards = []
       round_card_number.times do
         cards.push Deck.instance.get_card
@@ -141,7 +149,8 @@ class Board < ApplicationRecord
   end
 
   def finish_game(winner)
-    send('board_status=', "player#{winner}_win".to_sym)
+    self.winner = winner
+    self.status = :finished
   end
 
   private

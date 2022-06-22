@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2022_05_28_144939) do
+ActiveRecord::Schema[7.0].define(version: 2022_06_21_202948) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
     t.string "record_type", null: false
@@ -39,26 +39,27 @@ ActiveRecord::Schema[7.0].define(version: 2022_05_28_144939) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "board_players", force: :cascade do |t|
+    t.integer "board_id"
+    t.integer "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["board_id"], name: "index_board_players_on_board_id"
+    t.index ["user_id"], name: "index_board_players_on_user_id"
+  end
+
   create_table "boards", force: :cascade do |t|
-    t.integer "player1_id"
-    t.integer "player2_id"
-    t.integer "player3_id"
-    t.integer "player4_id"
     t.string "token"
-    t.string "score", default: "[\"\",\"\",\"\",\"\"]"
-    t.string "cards", default: "[\"\",\"\",\"\",\"\"]"
-    t.string "wins", default: "[\"\",\"\",\"\",\"\"]"
-    t.string "player_cards", default: "{\"p1\":[],\"p2\":[],\"p3\":[],\"p4\":[]}"
-    t.integer "board_status", default: 0
-    t.integer "players", default: 1
+    t.string "score"
+    t.string "cards"
+    t.string "wins"
+    t.string "player_cards"
+    t.string "winner"
+    t.integer "status", default: 0
     t.integer "round_card_number", default: 3
     t.integer "curr_round_left", default: 3
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["player1_id"], name: "index_boards_on_player1_id"
-    t.index ["player2_id"], name: "index_boards_on_player2_id"
-    t.index ["player3_id"], name: "index_boards_on_player3_id"
-    t.index ["player4_id"], name: "index_boards_on_player4_id"
   end
 
   create_table "users", force: :cascade do |t|
