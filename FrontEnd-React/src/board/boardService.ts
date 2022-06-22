@@ -7,16 +7,17 @@ const boardUrl = backEndUrl + "/boards";
 export interface Board {
   token: string;
   player1_name: string;
-  player2_name: string;
-  player3_name: string;
-  player4_name: string;
-  board_status: string;
+  player2_name?: string;
+  player3_name?: string;
+  player4_name?: string;
+  status: string;
   cards: string[];
   scores: string[];
   wins: string[];
   players: number;
   round_card_number: number;
   curr_round_left: number;
+  winner?: string;
 }
 
 export async function createGame(): Promise<ApiResponse<Board>> {
@@ -34,8 +35,7 @@ export async function getBoards(
   if (searchUser) {
     queryParams += "user&";
   }
-  status &&
-    status.forEach((state) => (queryParams += `board_status[]=${state}&`));
+  status && status.forEach((state) => (queryParams += `status[]=${state}&`));
 
   const response: ApiResponse<Board[]> = (
     await axios.get(boardUrl + queryParams)
@@ -142,7 +142,7 @@ export async function endCardRound(
 
 export async function finishGame(
   boardToken: string,
-  winner: number
+  winner: string
 ): Promise<ApiResponse<Board>> {
   const response: ApiResponse<Board> = (
     await axios.post(`${boardUrl}/${boardToken}/finish_game`, {

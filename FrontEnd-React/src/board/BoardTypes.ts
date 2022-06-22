@@ -20,20 +20,8 @@ export const BoardStatus: Record<string, EnumData> = {
     name: "waiting_card_throw",
     number: 3,
   },
-  player1_win: {
-    name: "player1_win",
+  finished: {
+    name: "finished",
     number: 4,
-  },
-  player2_win: {
-    name: "player2_win",
-    number: 5,
-  },
-  player3_win: {
-    name: "player3_win",
-    number: 6,
-  },
-  player4_win: {
-    name: "player4_win",
-    number: 7,
   },
 };

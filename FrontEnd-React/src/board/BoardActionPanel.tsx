@@ -1,4 +1,12 @@
-import { Divider, Paper } from "@mui/material";
+import {
+  Divider,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Radio,
+  Select,
+} from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
 import { DefaultButton } from "../components/ButtonPanel";
 import { showSuccessMessage, showErrorMessage } from "../components/SnackBar";
@@ -26,13 +34,14 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   const user = useSessionUser();
   const [win, setWin] = useState<number>(0);
   const [cards, setCards] = useState<string[]>([]);
-  const [cardNumber, setCardNumber] = useState<1 | 2 | 3 | 4 | 5>(1);
-  const [winnerNumber, setWinnerNumber] = useState<1 | 2 | 3 | 4>(1);
+  const [cardSelected, setCardSelected] = useState<string>();
   const [roundCardNumber, setRoundCardNumber] = useState<number>(0);
   const [scoreP1, setScoreP1] = useState<string>("");
   const [scoreP2, setScoreP2] = useState<string>("");
   const [scoreP3, setScoreP3] = useState<string>("");
   const [scoreP4, setScoreP4] = useState<string>("");
+  const [playerNames, setPlayerNames] = useState<string[]>([]);
+  const [winnerName, setWinnerName] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [showWinDialog, setShowWinDialog] = useState<boolean>(false);
   const [showCardDialog, setShowCardDialog] = useState<boolean>(false);
@@ -42,7 +51,10 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
     players,
     token,
     player1_name,
-    board_status,
+    player2_name,
+    player3_name,
+    player4_name,
+    status,
     round_card_number,
     curr_round_left,
   } = props.board;
@@ -50,38 +62,45 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   const prevRoundCardNumber = useRef<number>(0);
 
   useEffect(() => {
-    prevRoundStatus.current = board_status;
+    prevRoundStatus.current = status;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
+    let arr = [];
+    arr.push(player1_name);
+    if (player2_name) arr.push(player2_name);
+    if (player3_name) arr.push(player3_name);
+    if (player4_name) arr.push(player4_name);
+
+    setPlayerNames(arr);
     setIsAdmin(player1_name === user?.name);
-    setShowWinDialog(board_status === BoardStatus.waiting_wins_asked.name);
-    setShowCardDialog(board_status === BoardStatus.waiting_card_throw.name);
+    setShowWinDialog(status === BoardStatus.waiting_wins_asked.name);
+    setShowCardDialog(status === BoardStatus.waiting_card_throw.name);
     setGameStarted(
-      board_status === BoardStatus.waiting_card_throw.name ||
-        board_status === BoardStatus.waiting_wins_asked.name
+      status === BoardStatus.waiting_card_throw.name ||
+        status === BoardStatus.waiting_wins_asked.name
     );
 
     if (prevRoundCardNumber.current !== round_card_number) {
       prevRoundCardNumber.current = round_card_number;
     }
 
-    if (prevRoundStatus.current !== board_status) {
+    if (prevRoundStatus.current !== status) {
       prevRoundStatus.current === BoardStatus.waiting_card_throw.name &&
         setCards([]);
 
-      prevRoundStatus.current = board_status;
+      prevRoundStatus.current = status;
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.board]);
 
   useEffect(() => {
-    setScoreP1(scores[0]);
-    setScoreP2(scores[1]);
-    setScoreP3(scores[2]);
-    setScoreP4(scores[3]);
+    setScoreP1(scores[0] || "");
+    setScoreP2(scores[1] || "");
+    setScoreP3(scores[2] || "");
+    setScoreP4(scores[3] || "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -152,7 +171,12 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   };
 
   const finishGameAction = () => {
-    finishGame(token, winnerNumber)
+    if (!winnerName) {
+      showErrorMessage("Must select a winner");
+      return;
+    }
+
+    finishGame(token, winnerName)
       .then((response) => {
         showSuccessMessage(response.message);
       })
@@ -162,16 +186,17 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
   };
 
   const throwCardAction = () => {
-    let card = cards[cardNumber - 1];
-
-    if (!card) {
-      showErrorMessage("Card doesnt exists");
+    if (!cardSelected) {
+      showErrorMessage("Select a Card");
       return;
     }
 
-    throwCard(token, card)
+    throwCard(token, cardSelected)
       .then((response) => {
-        setCards((currCards) => currCards.filter((cardD) => cardD !== card));
+        setCards((currCards) =>
+          currCards.filter((cardD) => cardD !== cardSelected)
+        );
+        setCardSelected(undefined);
         showSuccessMessage(response.message);
       })
       .catch((err) =>
@@ -220,40 +245,34 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
                   style={{
                     display: "flex",
                     flexDirection: "row",
-                    gap: "6px",
+                    gap: "20px",
                   }}
                 >
                   {cards &&
                     cards.map((card, index) => (
-                      <Card key={index} card={card} />
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <Card key={index} card={card} />
+                        {showCardDialog && (
+                          <Radio
+                            key={index}
+                            checked={cardSelected === card}
+                            onChange={(e) => setCardSelected(e.target.value)}
+                            value={card}
+                            name="select-cards"
+                          />
+                        )}
+                      </div>
                     ))}
                 </div>
-              </div>
-              <Divider orientation="vertical" flexItem />
-              {showCardDialog && (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    maxWidth: "200px",
-                    gap: "7px",
-                    alignItems: "center",
-                  }}
-                >
-                  <FormNumberField
-                    title="Throw Cards"
-                    label="Card Number"
-                    name="card_number"
-                    value={cardNumber}
-                    setValue={setCardNumber}
-                  />
+                {showCardDialog && (
                   <DefaultButton
-                    text="Throw Card"
+                    text="Throw Selected Card"
                     onClick={() => throwCardAction()}
                     style={{ width: "100%" }}
                   />
-                </div>
-              )}
+                )}
+                <Divider orientation="vertical" flexItem />
+              </div>
             </>
           )}
 
@@ -391,19 +410,28 @@ export default function BoardActionPanel(props: BoardActionPanelProps) {
               style={{
                 display: "flex",
                 flexDirection: "column",
-                maxWidth: "200px",
+                maxWidth: "250px",
                 gap: "3px",
+                minWidth: "200px",
               }}
             >
               <h3>Finish Game</h3>
 
-              <FormNumberField
-                title="Who won?"
-                label="winnerNumber"
-                name="winner Number"
-                value={winnerNumber}
-                setValue={setWinnerNumber}
-              />
+              <FormControl fullWidth>
+                <InputLabel>Winner Username</InputLabel>
+                <Select
+                  value={winnerName}
+                  label="Winner Username"
+                  onChange={(e) => setWinnerName(e.target.value)}
+                >
+                  <MenuItem value="">
+                    <em>None</em>
+                  </MenuItem>
+                  {playerNames.map((name) => (
+                    <MenuItem value={name}>{name}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
               <DefaultButton
                 text="Confirm"

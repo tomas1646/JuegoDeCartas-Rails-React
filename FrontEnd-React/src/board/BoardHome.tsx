@@ -100,7 +100,7 @@ export default function BoardHome() {
             key={"1-" + board.token}
           >
             <Text text={"Board Id: " + board.token} />
-            <Text text={"Status: " + board.board_status} />
+            <Text text={"Status: " + board.status} />
             <DefaultButton
               text="Copy Id"
               onClick={() => setBoardId(board.token)}

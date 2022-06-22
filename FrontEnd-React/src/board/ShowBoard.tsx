@@ -33,12 +33,7 @@ export default function ShowBoard() {
     if (token) {
       getBoard(token).then((response) => {
         const board = response.content;
-        if (
-          board.board_status === BoardStatus.player1_win.name ||
-          board.board_status === BoardStatus.player2_win.name ||
-          board.board_status === BoardStatus.player3_win.name ||
-          board.board_status === BoardStatus.player4_win.name
-        ) {
+        if (board.status === BoardStatus.finished.name) {
           setGameFinished(true);
         }
         setBoard(board);
@@ -55,7 +50,7 @@ export default function ShowBoard() {
       </div>
     </>
   ) : (
-    <h1>Loading</h1>
+    <h3>Loading...</h3>
   );
 }
 
@@ -115,12 +110,13 @@ interface StatsPanelProps {
 function StatsPanel(props: StatsPanelProps) {
   const {
     token,
-    board_status,
+    status,
     player1_name,
     player2_name,
     player3_name,
     player4_name,
     players,
+    winner,
   } = props.board;
   const navigate = useNavigate();
   return (
@@ -145,7 +141,8 @@ function StatsPanel(props: StatsPanelProps) {
             <Grid item md={6} xs={12}>
               <SubTitle text={"Board Id: " + token} />
               <SubTitle text={"Players: " + players} />
-              <SubTitle text={"Board Status: " + board_status} />
+              <SubTitle text={"Board Status: " + status} />
+              {winner && <SubTitle text={"Winner: " + winner} />}
             </Grid>
 
             <Grid item md={6} xs={12}>
@@ -175,7 +172,7 @@ function GamePanel(props: GamePanelProps) {
     cards,
     scores,
     wins,
-    board_status,
+    status,
   } = props.board;
 
   return (
@@ -187,8 +184,8 @@ function GamePanel(props: GamePanelProps) {
               <Player
                 position={3}
                 name={player3_name}
-                scores={scores[2]}
-                wins={wins[2]}
+                scores={scores[2] || ""}
+                wins={wins[2] || ""}
               />
             </Grid>
           )}
@@ -206,8 +203,8 @@ function GamePanel(props: GamePanelProps) {
               <Player
                 position={1}
                 name={player1_name}
-                scores={scores[0]}
-                wins={wins[0]}
+                scores={scores[0] || ""}
+                wins={wins[0] || ""}
               />
             </Grid>
             <Grid
@@ -221,7 +218,7 @@ function GamePanel(props: GamePanelProps) {
                 justifyContent: "center",
               }}
             >
-              {board_status === BoardStatus.waiting_wins_asked.name ? (
+              {status === BoardStatus.waiting_wins_asked.name ? (
                 <>
                   {players >= 3 && (
                     <h3
@@ -336,8 +333,8 @@ function GamePanel(props: GamePanelProps) {
                 <Player
                   position={2}
                   name={player2_name}
-                  scores={scores[1]}
-                  wins={wins[1]}
+                  scores={scores[1] || ""}
+                  wins={wins[1] || ""}
                 />
               )}
             </Grid>
@@ -347,8 +344,8 @@ function GamePanel(props: GamePanelProps) {
               <Player
                 position={4}
                 name={player4_name}
-                scores={scores[3]}
-                wins={wins[3]}
+                scores={scores[3] || ""}
+                wins={wins[3] || ""}
               />
             </Grid>
           )}
