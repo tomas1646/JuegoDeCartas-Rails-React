@@ -33,7 +33,7 @@ export async function getBoards(
   let queryParams = "?";
 
   if (searchUser) {
-    queryParams += "user&";
+    queryParams += "player=true&";
   }
   status && status.forEach((state) => (queryParams += `status[]=${state}&`));
 
@@ -145,7 +145,7 @@ export async function finishGame(
   winner: string
 ): Promise<ApiResponse<Board>> {
   const response: ApiResponse<Board> = (
-    await axios.post(`${boardUrl}/${boardToken}/finish_game`, {
+    await axios.post(`${boardUrl}/${boardToken}/end_game`, {
       winner,
     })
   ).data;

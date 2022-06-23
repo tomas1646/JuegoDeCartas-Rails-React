@@ -15,7 +15,7 @@ class Board < ApplicationRecord
   }
 
   def json
-    json = {
+    data = {
       status:, token:, winner: winner || '',
       players: players.size,
       round_card_number:, curr_round_left:,
@@ -25,33 +25,27 @@ class Board < ApplicationRecord
     }
 
     players.each_with_index do |player, index|
-      json["player#{index + 1}_name".to_sym] = player.name
+      data["player#{index + 1}_name".to_sym] = player.name
     end
 
-    json
+    data
   end
 
   def reset_cards
     empty_arr = []
-    players.size.times do
-      empty_arr.push('')
-    end
+    empty_arr.fill('', 0, players.size)
     self.cards = empty_arr.to_json
   end
 
   def reset_wins
     empty_arr = []
-    players.size.times do
-      empty_arr.push('')
-    end
+    empty_arr.fill('', 0, players.size)
     self.wins = empty_arr.to_json
   end
 
   def reset_player_cards
     empty_hash = {}
-    1.upto(players.size) do |i|
-      empty_hash["p#{i}".to_sym] = []
-    end
+    players.size.times { |i| empty_hash["p#{i + 1}".to_sym] = [] }
     self.player_cards = empty_hash
   end
 
@@ -69,14 +63,14 @@ class Board < ApplicationRecord
   end
 
   def set_player_win(user, win_number)
-    winsArray = JSON.parse wins
+    wins_array = JSON.parse wins
     user_id = user.id
 
     players.each_with_index do |player, index|
-      winsArray[index] = win_number if player == user
+      wins_array[index] = win_number if player == user
     end
 
-    self.wins = winsArray.to_json
+    self.wins = wins_array.to_json
   end
 
   def did_player_throw_card?(user)
@@ -106,6 +100,8 @@ class Board < ApplicationRecord
 
   def join_board(user)
     players.push(user)
+
+    self.status = :full if players.size == MAXPLAYERS
   end
 
   def finish_round(new_round_number)
@@ -137,18 +133,20 @@ class Board < ApplicationRecord
   def deal_cards
     map_player_cards = {}
 
-    1.upto(players.size) do |i|
+    players.size.times do |i|
       cards = []
       round_card_number.times do
-        cards.push Deck.instance.get_card
+        random_card = Deck.instance.get_card
+        random_card = Deck.instance.get_card while cards.include?(random_card)
+        cards.push random_card
       end
-      map_player_cards["p#{i}".to_sym] = cards
+      map_player_cards["p#{i + 1}".to_sym] = cards
     end
 
     self.player_cards = map_player_cards.to_json
   end
 
-  def finish_game(winner)
+  def end_game(winner)
     self.winner = winner
     self.status = :finished
   end

@@ -3,7 +3,7 @@ class BoardsController < ApplicationController
   before_action :check_token, except: %i[show]
 
   def index
-    boards = Board.ransack(players_id_eq: params.keys.include?('user') ? @user.id : nil,
+    boards = Board.ransack(players_id_eq: params[:player] ? @user.id : nil,
                            status_in: params[:status]).result.includes(:players)
 
     render_success_response(boards.preload(:players).map { |board| board.json })
@@ -27,8 +27,6 @@ class BoardsController < ApplicationController
     return render_success_response(@board.json, 'Joined to the board') if @board.is_player_in_board @user
 
     return render_error_response({}, 'Game Started. Cant join.') unless @board.waiting_players?
-
-    return render_error_response({}, 'Board is full') if @board.full
 
     @board.join_board @user
 
@@ -113,8 +111,8 @@ class BoardsController < ApplicationController
     end
   end
 
-  def finish_game
-    @board.finish_game params[:winner]
+  def end_game
+    @board.end_game params[:winner]
 
     if @board.save
       render_success_response(@board.json, 'Game Finished')

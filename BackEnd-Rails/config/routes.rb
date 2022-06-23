@@ -15,7 +15,7 @@ Rails.application.routes.draw do
       post :update_score
       post :throw_card
       post :end_card_round
-      post :finish_game
+      post :end_game
       get :cards
     end
   end
